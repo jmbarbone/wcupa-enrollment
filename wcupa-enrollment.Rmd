@@ -10,6 +10,7 @@ runtime: shiny
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(magrittr)
+library(shiny)
 ```
 
 # Load in Data
@@ -68,5 +69,16 @@ plotly::ggplotly(p)
 ## Demographics
 
 ## Enrollment
+
+```{r tabsets, echo=FALSE}
+shinyAppFile(
+  "shiny/app.R",
+  # system.file("app.R", lib.loc = "wcupa-enrollment")
+  # system.file("examples/06_tabsets", package = "shiny"),
+  options = list(
+    width = "100%", height = 550
+  )
+)
+```
 
 
