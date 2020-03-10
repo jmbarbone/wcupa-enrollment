@@ -3,12 +3,13 @@
 # Create data set
 # ------------------------------------------------------------------------#
 
-# Source function ---------------------------------------------------------
-
-source("download_wcupa.R")
-
+library(tidyverse)
+library(janitor)
 
 # Headcount - Academic plan -----------------------------------------------
+
+## may have to do these in groups...
+## manual process for downloading everything..
 
 urls <- c(
   fall_2018 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2018HeadcountbyAcademicPlanandDemographics.xls",
@@ -16,9 +17,10 @@ urls <- c(
   fall_2016 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2016HeadcountbyAcademicPlanandDemographics.xls",
   fall_2015 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2015HeadcountbyAcademicPlanandDemographics.xls",
   fall_2014 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/FALL2014HeadcountbyAcademicPlanandDemographics.xls",
+
   fall_2013 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/RevisedFall2013HeadcountEnrollmentbyProgrambyGenderbyRace.pdf",
   fall_2012 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2012HeadcountbyAcademicPlanandDemographics_000.xlsx",
-  # fall_2011 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/HeadcountsbyAcadPlanDemoF11.pdf",
+  fall_2011 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/HeadcountsbyAcadPlanDemoF11.pdf",
   # fall_2010 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/HeadcountsbyAcadPlanDemoF10.pdf",
   # fall_2009 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/EnrollmentbyGenderEthnResF09.pdf",
   # fall_2008 = "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/FallHeadCountbyAcadPlanDemographics_08_000.pdf",
@@ -108,5 +110,4 @@ wcupa_headcount %<>%
 
 # Save data ---------------------------------------------------------------
 
-save(wcupa_headcount, file = "wcupa_headcount.RData")
-remove(list = ls())
+usethis::use_data(wcupa_headcount, overwrite = TRUE)
