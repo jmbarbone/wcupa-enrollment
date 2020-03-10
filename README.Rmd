@@ -7,3 +7,14 @@ output: github_document
 # WCUPA Enrollment
 
 Data, analysis, and visuals of West Chester University of Pennsylvania's enrollment data from 2003 to 2019.
+
+# Challenges
+
++ Downloading data from URLS
++ Data are in different formats
+    - xlsx or xls or pdf
+    - different information between file types
++ University changes college structure in 2017
+    - Several colleges renames
+    - College of Arts and Sciences broken into College of Arts and Humanities and College of Science and Mathematics
+

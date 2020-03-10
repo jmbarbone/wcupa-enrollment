@@ -1,0 +1,84 @@
+---
+title: "WCUPA Headcounts"
+author: "Jordan Mark Barbone"
+date: "8/8/2019"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+library(shiny)
+```
+
+# Load in Data
+
+```{r load-data}
+load("wcupa_headcount.RData")
+glimpse(wcupa_headcount)
+```
+
+# Enrollment totals {.tabset .tabset-fade .tabset-pills} 
+
+## By academic group
+
+```{r, echo=FALSE}
+p <- wcupa_headcount %>%
+  group_by(year_month, acad_career, acad_group) %>%
+  summarise(total = sum(total, na.rm = T)) %>%
+  ungroup %>%
+  ggplot(aes(x = year_month, y = total, col = acad_group, group = acad_group)) +
+  geom_line() +
+  facet_wrap(~acad_career, ncol = 1, scales = "free_y")
+
+plotly::ggplotly(p)
+```
+
+## By academic organization
+
+```{r, echo=FALSE}
+p <- wcupa_headcount %>%
+  group_by(year_month, acad_career, acad_group, acad_org) %>%
+  summarise(total = sum(total, na.rm = T)) %>%
+  ungroup %>%
+  ggplot(aes(x = year_month, y = total, col = acad_group, group = acad_org)) +
+  geom_line() +
+  facet_wrap(~acad_career, ncol = 1, scales = "free_y")
+
+plotly::ggplotly(p)
+```
+
+## By major
+
+```{r, echo=FALSE}
+p <- wcupa_headcount %>%
+  group_by(year_month, acad_career, acad_group, acad_org, description) %>%
+  summarise(total = sum(total, na.rm = T)) %>%
+  ungroup %>% 
+  ggplot(aes(x = year_month, y = total, col = acad_group, group = description)) +
+  geom_line() +
+  facet_wrap(~acad_career, ncol = 1, scales = "free_y")
+
+plotly::ggplotly(p)
+```
+
+# Cluster analysis
+
+## Demographics
+
+## Enrollment
+
+```{r tabsets, echo=FALSE}
+shinyAppFile(
+  "shiny/app.R",
+  # system.file("app.R", lib.loc = "wcupa-enrollment")
+  # system.file("examples/06_tabsets", package = "shiny"),
+  options = list(
+    width = "100%", height = 550
+  )
+)
+```
+
+
