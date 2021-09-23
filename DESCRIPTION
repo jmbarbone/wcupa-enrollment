@@ -1,13 +1,13 @@
 Package: wcupaenrollment
-Title: What the Package Does (One Line, Title Case)
+Title: West Chester University of Pennsyvlania Enrollment App
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "First",
-           family = "Last",
-           role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Authors@R:
+    person(given   = "Jordan Mark",
+           family  = "Barbone",
+           role    = c("aut", "cph", "cre"),
+           email   = "jmbarbone@gmail.com",
+           comment = c(ORCID = "0000-0001-9788-3628"))
+Description: Provides a shiny app for visualizing and reporting on WCUPA enrollment statistics.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
