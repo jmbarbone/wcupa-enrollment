@@ -2,46 +2,29 @@
 #'
 #' @param url The URL associated with the file
 #' @return data set with academic headcount information
-#'
-#' @importFrom dplyr filter
-#' @importFrom dplyr mutate_at
-#' @importFrom dplyr select
-#' @importFrom dplyr vars
-#' @importFrom magrittr equals
-#' @importFrom magrittr not
-#' @importFrom pdftools pdf_text
-#' @importFrom purrr map
-#' @importFrom purrr map_dfr
-#' @importFrom readxl read_excel
-#' @importFrom stringr regex
-#' @importFrom stringr str_detect
-#' @importFrom stringr str_replace
-#' @importFrom stringr str_split
-#' @importFrom tibble enframe
-#' @importFrom tidyr drop_na
-#' @importFrom tidyr separate
-#'
 #' @export
 
 download_wcupa <- function(url) {
-  attributes(url) <- list(class = str_replace(url, regex("^.*\\.edu.*\\.([:alpha:]{3})[:alpha:]?$"), "\\1"))
+  attributes(url) <- list(class = stringr::str_replace(url, stringr::regex("^.*\\.edu.*\\.([:alpha:]{3})[:alpha:]?$"), "\\1"))
   UseMethod("download_wcupa", url)
 }
 
 #' @export
+#' @rdname download_wcupa
 download_wcupa.xls <- function(url) {
   temp <- paste0(tempfile(), ".xlsx")
   temp <- tempfile()
   download.file(url, destfile = temp, method = "libcurl", mode = "wb")
-  read_excel(temp) %>%
-    mutate_at(vars(TOTAL), as.numeric)
+  readxl::read_excel(temp) %>%
+    dplyr::mutate(dplyr::across(TOTAL), as.numeric)
 }
 
 #' @export
+#' @rdname download_wcupa
 download_wcupa.pdf <- function(url) {
   temp <- paste0(tempfile(), ".pdf")
   download.file(url, destfile = temp, method = "libcurl", mode = "wb")
-  pdf_lines <- pdf_text(temp)
+  pdf_lines <- pdftool::pdf_text(temp)
 
   col_names_new <- c(
     "id",
@@ -64,17 +47,17 @@ download_wcupa.pdf <- function(url) {
   )
 
   pdf_lines %>%
-    map(~ str_split(.x, "\\r\\n", simplify = F)) %>%
-    unlist %>%
-    str_split("\n") %>%
+    purrr::map(~stringr::str_split(.x, "\\r\\n", simplify = FALSE)) %>%
+    unlist() %>%
+    stringr::str_split("\n") %>%
     # extract(-c(1:4)) %>%
-    map_dfr(enframe) %>%
-    filter(str_detect(value, "ACAD|CAREER|Headcount|Total", negate = TRUE),
-           not(equals(value, ""))) %>%
-    separate(value, into = col_names_new, regex("\\s{2,}")) %>%
-    drop_na(`ACAD CAREER`) %>%
-    select(-name, -id) %>%
+    purrr::map_dfr(enframe) %>%
+    dplyr::filter(stringr::str_detect(value, "ACAD|CAREER|Headcount|Total", negate = TRUE),
+           magrittr::not(magrittr::equals(value, ""))) %>%
+    tidyr::separate(value, into = col_names_new, stringr::regex("\\s{2,}")) %>%
+    tidyr::drop_na(`ACAD CAREER`) %>%
+    dplyr::select(-name, -id) %>%
     # mutate(`Effective date` = NA) %>%
     # mutate_at(vars(`Effective date`), lubridate::as_datetime) %>%
-    mutate_at(vars(TOTAL), as.numeric)
+    dplyr::mutate(dplyr::across(TOTAL), as.numeric)
 }

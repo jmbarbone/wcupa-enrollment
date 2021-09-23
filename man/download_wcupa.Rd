@@ -2,9 +2,15 @@
 % Please edit documentation in R/download_wcupa.R
 \name{download_wcupa}
 \alias{download_wcupa}
+\alias{download_wcupa.xls}
+\alias{download_wcupa.pdf}
 \title{Download data from WCUPA}
 \usage{
 download_wcupa(url)
+
+\method{download_wcupa}{xls}(url)
+
+\method{download_wcupa}{pdf}(url)
 }
 \arguments{
 \item{url}{The URL associated with the file}
