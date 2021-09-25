@@ -87,34 +87,36 @@ BAD_ROWS = [x + " Total" for x in ["Undergraduate", "Graduate", "University"]]
 BAD_ROWS.append("Acad Group")
 BAD_ROWS.append("College")
 
+
 def wcu_read_excel(x, engine=None, nrows=None):
   df = pd.read_excel(urls.get(x), header=[0, 1], engine=engine, nrows=nrows)
   df.columns = rename_columns(unnest_columns(df.columns))
   df = df[~df.ACAD_GROUP.isin(BAD_ROWS)]
   return df
 
+
+# Excel files --------------------------------------------------------
 # Excel files are a bit more clean
 
-wcu_read_excel("fall_2020", nrows=289)
-wcu_read_excel("fall_2019", nrows=286)
-wcu_read_excel("fall_2018", nrows=275)
-wcu_read_excel("fall_2017", nrows=270)
-wcu_read_excel("fall_2016", nrows=258)
-wcu_read_excel("fall_2015", nrows=242)
-wcu_read_excel("fall_2014", nrows=235)
-# fall 2013 is for some reason a pdf...
-wcu_read_excel("fall_2012", engine="openpyxl", nrows=235)
+wcu_excel_df = {
+    "fall_2020"   : wcu_read_excel("fall_2020", nrows=289),
+    "fall_2019"   : wcu_read_excel("fall_2019", nrows=286),
+    "fall_2018"   : wcu_read_excel("fall_2018", nrows=275),
+    "fall_2017"   : wcu_read_excel("fall_2017", nrows=270),
+    "fall_2016"   : wcu_read_excel("fall_2016", nrows=258),
+    "fall_2015"   : wcu_read_excel("fall_2015", nrows=242),
+    "fall_2014"   : wcu_read_excel("fall_2014", nrows=235),
+    "fall_2012"   : wcu_read_excel("fall_2012", engine="openpyxl", nrows=235),
+    "spring_2021" : wcu_read_excel("spring_2021", nrows=291),
+    "spring_2020" : wcu_read_excel("spring_2020", nrows=283),
+    "spring_2019" : wcu_read_excel("spring_2019", nrows=278),
+    "spring_2018" : wcu_read_excel("spring_2018", nrows=264),
+    "spring_2017" : wcu_read_excel("spring_2017", nrows=263),
+    "spring_2016" : wcu_read_excel("spring_2016", nrows=242)
+}
 
-wcu_read_excel("spring_2021", nrows=291)
-wcu_read_excel("spring_2020", nrows=283)
-wcu_read_excel("spring_2019", nrows=278)
-wcu_read_excel("spring_2018", nrows=264)
-wcu_read_excel("spring_2017", nrows=263)
-wcu_read_excel("spring_2016", nrows=242)
 
-
-# Fall 2013 ----------------------------------------------------------
-# PDF
+# PDFs ---------------------------------------------------------------
 
 def wcu_read_pdf(x,
                  skiprows=0,
