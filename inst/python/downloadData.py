@@ -1,4 +1,7 @@
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import pandas as pd
 import tabula
 import httpimport
@@ -61,19 +64,24 @@ def rename_columns(x):
 def unnest_columns(dataframe):
   return [x[0] if "Unnamed" in x[1] else f"{x[0]}_{x[1]}" for x in dataframe]
   
+bottom_cols = [x + " Total" for x in ["Undergraduate", "Graduate", "University"]]
 
-# Read each file
-# Not the cleanest but many of these have differences
+def wcu_read_excel(x):
+  df = pd.read_excel(urls.get(x), header=[0, 1])
+  df.columns = rename_columns(unnest_columns(df.columns))
+  df = df[~df.ACAD_GROUP.isin(bottom_cols)]
+  return df
 
-df = pd.read_excel(urls.get("fall_2018"), header=[0, 1], nrows=275)
-# Clean up the multiple headers
-df.columns = rename_columns(unnest_columns(df.columns))
-# maybe just add it to the dictionary?
-fall_2018 = df
+wcu_read_excel("fall_2018")
+wcu_read_excel("fall_2017")
+wcu_read_excel("fall_2016")
+wcu_read_excel("fall_2015")
+wcu_read_excel("fall_2014")
 
-df = pd.read_excel(urls.get("fall_2017"), header=[0, 1], nrows=270)
-df.columns = rename_columns(unnest_columns(df.columns))
-fall_2017 = df
+
+
+# Fall 2013 ----------------------------------------------------------
+# PDF
 
 po = {"skiprows": [1]}
 df = tabula.read_pdf(urls.get("fall_2013"), pages=1, pandas_options=po, multiple_tables=False)[0]
