@@ -11,6 +11,8 @@ import pyjordan
 
 urls = {
   # These are good
+  "fall_2020": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2020HeadcountbyAcademicPlanandDemographics.xls",
+  "fall_2019": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2019HeadcountbyAcademicPlanandDemographics.xls",
   "fall_2018": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2018HeadcountbyAcademicPlanandDemographics.xls",
   "fall_2017": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2017HeadcountbyAcademicPlanandDemographics.xls",
   "fall_2016": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2016HeadcountbyAcademicPlanandDemographics.xls",
@@ -31,6 +33,8 @@ urls = {
   "fall_2003": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/HeadCountEnrlByDeptMinorityUGG_065.pdf",
 
   # these are good
+  "spring_2021": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2021HeadcountbyAcademicPlanandDemographics.xls",
+  "spring_2020": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2020HeadcountbyAcademicPlanandDemographics.xls",
   "spring_2019": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2019HeadcountbyAcademicPlanandDemographics.xls",
   "spring_2018": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2018HeadcountbyAcademicPlanandDemographics.xls",
   "spring_2017": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2017HeadcountbyAcademicPlanandDemographics.xls",
@@ -38,7 +42,7 @@ urls = {
 
   # These are bad
   "spring_2015": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2015HeadcountbyAcademicPlanandDemographics.pdf",
-  "spring_2014": "https://www.wc upa.edu/viceProvost/institutionalResearch/documents/Spring2014HeadcountbyAcadPlanandDemographics.pdf",
+  "spring_2014": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2014HeadcountbyAcadPlanandDemographics.pdf",
   "spring_2013": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2013HeadcountbyAcademicPlanandDemographics.pdf",
   "spring_2012": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spr12HeadcountsbyAcadPlan.pdf",
   "spring_2011": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/SpringHeadcountsbyAcadplan_000.pdf",
@@ -83,31 +87,37 @@ BAD_ROWS = [x + " Total" for x in ["Undergraduate", "Graduate", "University"]]
 BAD_ROWS.append("Acad Group")
 BAD_ROWS.append("College")
 
-def wcu_read_excel(x, engine=None):
-  df = pd.read_excel(urls.get(x), header=[0, 1], engine=engine)
+def wcu_read_excel(x, engine=None, nrows=None):
+  df = pd.read_excel(urls.get(x), header=[0, 1], engine=engine, nrows=nrows)
   df.columns = rename_columns(unnest_columns(df.columns))
   df = df[~df.ACAD_GROUP.isin(BAD_ROWS)]
   return df
 
+# Excel files are a bit more clean
 
-wcu_read_excel("fall_2018")
-wcu_read_excel("fall_2017")
-wcu_read_excel("fall_2016")
-wcu_read_excel("fall_2015")
-wcu_read_excel("fall_2014")
-wcu_read_excel("fall_2012", engine="openpyxl")
+wcu_read_excel("fall_2020", nrows=289)
+wcu_read_excel("fall_2019", nrows=286)
+wcu_read_excel("fall_2018", nrows=275)
+wcu_read_excel("fall_2017", nrows=270)
+wcu_read_excel("fall_2016", nrows=258)
+wcu_read_excel("fall_2015", nrows=242)
+wcu_read_excel("fall_2014", nrows=235)
+# fall 2013 is for some reason a pdf...
+wcu_read_excel("fall_2012", engine="openpyxl", nrows=235)
 
-wcu_read_excel("spring_2019")
-wcu_read_excel("spring_2018")
-wcu_read_excel("spring_2017")
-wcu_read_excel("spring_2016")
+wcu_read_excel("spring_2021", nrows=291)
+wcu_read_excel("spring_2020", nrows=283)
+wcu_read_excel("spring_2019", nrows=278)
+wcu_read_excel("spring_2018", nrows=264)
+wcu_read_excel("spring_2017", nrows=263)
+wcu_read_excel("spring_2016", nrows=242)
 
 
 # Fall 2013 ----------------------------------------------------------
 # PDF
 
 def wcu_read_pdf(x,
-                 skiprows=None,
+                 skiprows=0,
                  fill=False, 
                  ant=False,
                  cols=1
@@ -118,6 +128,7 @@ def wcu_read_pdf(x,
                        pandas_options=po,
                        multiple_tables=False)
   df = df[0]
+  df = df.replace("-", "0")
   
   # Set the new column names
   df.columns = wcu_column_names(cols)
@@ -139,13 +150,27 @@ def wcu_read_pdf(x,
   return df
 
 
+# the ones that fail too hard may have to be manually done...
+
 wcu_read_pdf("fall_2013", skiprows=1)
-# CAREER needs to be recoded
-wcu_read_pdf("fall_2011", skiprows=0, fill=True, ant=True)
-# There's some row leakage
-wcu_read_pdf("fall_2010", skiprows=0, fill=True, ant=True, cols=2)
-# Need new columns for this
-# wcu_read_pdf("fall_2009", skiprows=0, fill=True, ant=True, cols=2)
+wcu_read_pdf("fall_2011", fill=True, ant=True) # CAREER needs recoding
+wcu_read_pdf("fall_2010", fill=True, ant=True, cols=2) # bad alignment
+wcu_read_pdf("fall_2009") # 29 cols
+wcu_read_pdf("fall_2008") # 31 cols
+wcu_read_pdf("fall_2007") # 34 cols
+wcu_read_pdf("fall_2006") # 26 cols
+wcu_read_pdf("fall_2005") # 39 cols
+wcu_read_pdf("fall_2004") # fails
+wcu_read_pdf("fall_2003") # 26 cols
+
+wcu_read_pdf("spring_2015") # 35 columns
+wcu_read_pdf("spring_2014") # fail
+wcu_read_pdf("spring_2013")
+wcu_read_pdf("spring_2012") # 25 cols
+wcu_read_pdf("spring_2011") # some misalignment
+wcu_read_pdf("spring_2010") # fail
+wcu_read_pdf("spring_2009") # fail
+
 
 # Oh gosh darnit, fall_2011 is whack
 # po = {"skiprows": [0]}
@@ -161,7 +186,6 @@ wcu_read_pdf("fall_2010", skiprows=0, fill=True, ant=True, cols=2)
 # # df.fill # fill the empty rows
 # df
 # View(df)
-
 
 
 def doDownloadData():
