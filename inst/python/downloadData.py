@@ -53,6 +53,21 @@ DEMOS = pyjordan.unnest(DEMOS)
 ACADS = ["ACAD_" + x for x in ["GROUP", "ORG", "CAREER", "PLAN"]]
 COLNAMES = ACADS + ["DEGREE", "DESCRIPTION", "TOTAL"] + DEMOS
 
+# Hey, a different order
+DEMOS2 = ["FEMALE", "MALE", "AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "UNKNOWN", "MULTI_RACIAL", "IN_STATE", "OUT_OF_STATE"]
+DEMOS2 = [x for x in [[x + "_N", x + "_P"] for x in DEMOS2]]
+DEMOS2 = pyjordan.unnest(DEMOS2)
+COLNAMES2 = ACADS + ["DEGREE", "DESCRIPTION", "TOTAL"] + DEMOS2
+
+
+def wcu_column_names(i):
+    switch={
+      1: COLNAMES,
+      2: COLNAMES2,
+      }
+    # Should this be an error?
+    return switch.get(i, "Invalid Column version")
+
 
 def rename_columns(x):
   x = [i.upper() for i in x]
@@ -64,31 +79,90 @@ def rename_columns(x):
 def unnest_columns(dataframe):
   return [x[0] if "Unnamed" in x[1] else f"{x[0]}_{x[1]}" for x in dataframe]
   
-bottom_cols = [x + " Total" for x in ["Undergraduate", "Graduate", "University"]]
+BAD_ROWS = [x + " Total" for x in ["Undergraduate", "Graduate", "University"]]
+BAD_ROWS.append("Acad Group")
+BAD_ROWS.append("College")
 
-def wcu_read_excel(x):
-  df = pd.read_excel(urls.get(x), header=[0, 1])
+def wcu_read_excel(x, engine=None):
+  df = pd.read_excel(urls.get(x), header=[0, 1], engine=engine)
   df.columns = rename_columns(unnest_columns(df.columns))
-  df = df[~df.ACAD_GROUP.isin(bottom_cols)]
+  df = df[~df.ACAD_GROUP.isin(BAD_ROWS)]
   return df
+
 
 wcu_read_excel("fall_2018")
 wcu_read_excel("fall_2017")
 wcu_read_excel("fall_2016")
 wcu_read_excel("fall_2015")
 wcu_read_excel("fall_2014")
+wcu_read_excel("fall_2012", engine="openpyxl")
 
+wcu_read_excel("spring_2019")
+wcu_read_excel("spring_2018")
+wcu_read_excel("spring_2017")
+wcu_read_excel("spring_2016")
 
 
 # Fall 2013 ----------------------------------------------------------
 # PDF
 
-po = {"skiprows": [1]}
-df = tabula.read_pdf(urls.get("fall_2013"), pages=1, pandas_options=po, multiple_tables=False)[0]
-df.columns = COLNAMES
-View(df)
+def wcu_read_pdf(x,
+                 skiprows=None,
+                 fill=False, 
+                 ant=False,
+                 cols=1
+                 ):
+  po = {"skiprows": [skiprows]}
+  df = tabula.read_pdf(urls.get(x),
+                       pages="all",
+                       pandas_options=po,
+                       multiple_tables=False)
+  df = df[0]
+  
+  # Set the new column names
+  df.columns = wcu_column_names(cols)
+  df[~df.ACAD_GROUP.isin(BAD_ROWS)]
+  df = df[~df.ACAD_GROUP.str.endswith("Total", na=False)]
+  df = df[~df.ACAD_GROUP.str.endswith("Totals", na=False)]
+  df = df[~df.ACAD_PLAN.str.endswith("Total", na=False)]
+  df = df[~df.ACAD_PLAN.str.endswith("Totals", na=False)]
+  df = df[~df.ACAD_PLAN.isna()]
+  
+  if ant:
+    df.ACAD_ORG[0] = "ANT"
+  
+  
+  if fill:
+    df = df.fillna(method="ffill")
+    
+  
+  return df
 
-View(df)
+
+wcu_read_pdf("fall_2013", skiprows=1)
+# CAREER needs to be recoded
+wcu_read_pdf("fall_2011", skiprows=0, fill=True, ant=True)
+# There's some row leakage
+wcu_read_pdf("fall_2010", skiprows=0, fill=True, ant=True, cols=2)
+# Need new columns for this
+# wcu_read_pdf("fall_2009", skiprows=0, fill=True, ant=True, cols=2)
+
+# Oh gosh darnit, fall_2011 is whack
+# po = {"skiprows": [0]}
+# df = tabula.read_pdf(urls.get("fall_2011"), pages="all", pandas_options=po, multiple_tables=False)[0]
+# df.columns = COLNAMES
+# df = df[~df.ACAD_GROUP.str.endswith("Totals", na=False)]
+# df = df[~df["ACAD_PLAN"].str.endswith("Total", na=False)]
+# df = df[~df.ACAD_PLAN.isna()]
+# df = df[df.ACAD_GROUP != "Acad Group"]
+# df.ACAD_ORG[0] = "ANT"
+# df.fillna(method="ffill")
+# df
+# # df.fill # fill the empty rows
+# df
+# View(df)
+
+
 
 def doDownloadData():
     print("Working on it")
