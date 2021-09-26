@@ -128,25 +128,6 @@ def wcu_read_excel(x, engine=None, nrows=None, skipfooter=0):
 # May be able to safely bind these together
 
 # could have used skipfooter=3 but I know how many rows they have
-wcu_excel_dict = {
-    "fall_2020"   : wcu_read_excel("fall_2020", nrows=289),
-    "fall_2019"   : wcu_read_excel("fall_2019", nrows=286),
-    "fall_2018"   : wcu_read_excel("fall_2018", nrows=275),
-    "fall_2017"   : wcu_read_excel("fall_2017", nrows=270),
-    "fall_2016"   : wcu_read_excel("fall_2016", nrows=258),
-    "fall_2015"   : wcu_read_excel("fall_2015", nrows=242),
-    "fall_2014"   : wcu_read_excel("fall_2014", nrows=235),
-    "fall_2012"   : wcu_read_excel("fall_2012", engine="openpyxl", nrows=235),
-    "spring_2021" : wcu_read_excel("spring_2021", nrows=291),
-    "spring_2020" : wcu_read_excel("spring_2020", nrows=283),
-    "spring_2019" : wcu_read_excel("spring_2019", nrows=278),
-    "spring_2018" : wcu_read_excel("spring_2018", nrows=264),
-    "spring_2017" : wcu_read_excel("spring_2017", nrows=263),
-    "spring_2016" : wcu_read_excel("spring_2016", nrows=242)
-}
-
-wcu_excel_df = pd.concat(wcu_excel_dict)
-wcu_excel_df.shape
 
 # PDFs ---------------------------------------------------------------
 
@@ -200,26 +181,26 @@ def wcu_read_pdf(x,
 
 # the ones that fail too hard may have to be manually done...
 
-wcu_read_pdf("fall_2013", skiprows=1)
-wcu_read_pdf("fall_2011", fill=True, ant=True) # CAREER needs recoding
-wcu_read_pdf("fall_2010", fill=True, ant=True, cols=2) # bad alignment
-wcu_read_pdf("fall_2009", cols=3)
-wcu_read_pdf("fall_2008", cols=4, lattice=True) # This looks pretty bad -- simething wrong with the line returns in OOS?
-wcu_read_pdf("fall_2007") # 34 cols -- something is wrong
-wcu_read_pdf("fall_2006", cols=5) # 26 cols -- something is wrong
-wcu_read_pdf("fall_2005") # 39 cols
-wcu_read_pdf("fall_2004") # fails
-wcu_read_pdf("fall_2003", cols=5)
+# wcu_read_pdf("fall_2013", skiprows=1)
+# wcu_read_pdf("fall_2011", fill=True, ant=True) # CAREER needs recoding
+# wcu_read_pdf("fall_2010", fill=True, ant=True, cols=2) # bad alignment
+# wcu_read_pdf("fall_2009", cols=3)
+# wcu_read_pdf("fall_2008", cols=4, lattice=True) # This looks pretty bad -- simething wrong with the line returns in OOS?
+# wcu_read_pdf("fall_2007") # 34 cols -- something is wrong
+# wcu_read_pdf("fall_2006", cols=5) # 26 cols -- something is wrong
+# wcu_read_pdf("fall_2005") # 39 cols
+# wcu_read_pdf("fall_2004") # fails
+# wcu_read_pdf("fall_2003", cols=5)
+# 
+# wcu_read_pdf("spring_2015") # 35 columns
+# wcu_read_pdf("spring_2014") # fail
+# wcu_read_pdf("spring_2013")
+# wcu_read_pdf("spring_2012") # 25 cols
+# wcu_read_pdf("spring_2011") # some misalignment
+# wcu_read_pdf("spring_2010") # fail
+# wcu_read_pdf("spring_2009") # fail
 
-wcu_read_pdf("spring_2015") # 35 columns
-wcu_read_pdf("spring_2014") # fail
-wcu_read_pdf("spring_2013")
-wcu_read_pdf("spring_2012") # 25 cols
-wcu_read_pdf("spring_2011") # some misalignment
-wcu_read_pdf("spring_2010") # fail
-wcu_read_pdf("spring_2009") # fail
 
-pdfs = glob.glob("data-raw/*.pdf")
 
 def wcu_pdf_to_csv(x):
     df = tabula.read_pdf(x, pages="all", multiple_tables=False)
@@ -238,11 +219,31 @@ def try_wcu_pdf_to_csv(x):
   
   return res
 
-[try_wcu_pdf_to_csv(i) for i in pdfs]
-
 
 def doDownloadData():
     print("Working on it")
+    wcu_excel_dict = {
+        "fall_2020"   : wcu_read_excel("fall_2020", nrows=289),
+        "fall_2019"   : wcu_read_excel("fall_2019", nrows=286),
+        "fall_2018"   : wcu_read_excel("fall_2018", nrows=275),
+        "fall_2017"   : wcu_read_excel("fall_2017", nrows=270),
+        "fall_2016"   : wcu_read_excel("fall_2016", nrows=258),
+        "fall_2015"   : wcu_read_excel("fall_2015", nrows=242),
+        "fall_2014"   : wcu_read_excel("fall_2014", nrows=235),
+        "fall_2012"   : wcu_read_excel("fall_2012", engine="openpyxl", nrows=235),
+        "spring_2021" : wcu_read_excel("spring_2021", nrows=291),
+        "spring_2020" : wcu_read_excel("spring_2020", nrows=283),
+        "spring_2019" : wcu_read_excel("spring_2019", nrows=278),
+        "spring_2018" : wcu_read_excel("spring_2018", nrows=264),
+        "spring_2017" : wcu_read_excel("spring_2017", nrows=263),
+        "spring_2016" : wcu_read_excel("spring_2016", nrows=242)
+    }
+
+    wcu_excel_df = pd.concat(wcu_excel_dict)
+    wcu_excel_df.to_csv("data-raw/excel2csv/wcu_headcounts.csv", index=False)
+    
+    pdfs = glob.glob("data-raw/*.pdf")
+    [try_wcu_pdf_to_csv(i) for i in pdfs]
 
 
 if __name__ == "__main__":
