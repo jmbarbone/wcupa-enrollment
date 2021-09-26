@@ -6,6 +6,8 @@ import pandas as pd
 import tabula
 import httpimport
 import pyjordan
+import os
+import glob
 
 pd.set_option('display.max_rows', 20)
 pd.set_option('display.max_columns', 15)
@@ -179,12 +181,11 @@ def wcu_read_pdf(x,
 
     # Set the new column names
     df.columns = wcu_column_names(cols)
-    df[~df.ACAD_GROUP.isin(BAD_ROWS)]
-    # Clean this junk up
-
-    df = df[~df.ACAD_CAREER.str.match("totals?", na=False, regex=True, case=False])
-    df = df[~df.ACAD_GROUP.str.match("totals?", na=False, regex=True, case=False])
-    df = df[~df.ACAD_PLAN.str.match("totals?", na=False, regex=True, case=False])
+    
+    df = df[~df.ACAD_GROUP.isin(BAD_ROWS)]
+    df = df[~df.ACAD_CAREER.str.contains("total", na=False, case=False)]
+    df = df[~df.ACAD_GROUP.str.contains("total", na=False, case=False)]
+    df = df[~df.ACAD_PLAN.str.contains("total", na=False, case=False)]
     df = df[~df.ACAD_PLAN.isna()]
 
     if ant:
@@ -203,7 +204,7 @@ wcu_read_pdf("fall_2013", skiprows=1)
 wcu_read_pdf("fall_2011", fill=True, ant=True) # CAREER needs recoding
 wcu_read_pdf("fall_2010", fill=True, ant=True, cols=2) # bad alignment
 wcu_read_pdf("fall_2009", cols=3)
-wcu_read_pdf("fall_2008", cols=4, lattice=True) # This looks pretty bad
+wcu_read_pdf("fall_2008", cols=4, lattice=True) # This looks pretty bad -- simething wrong with the line returns in OOS?
 wcu_read_pdf("fall_2007") # 34 cols -- something is wrong
 wcu_read_pdf("fall_2006", cols=5) # 26 cols -- something is wrong
 wcu_read_pdf("fall_2005") # 39 cols
@@ -218,21 +219,26 @@ wcu_read_pdf("spring_2011") # some misalignment
 wcu_read_pdf("spring_2010") # fail
 wcu_read_pdf("spring_2009") # fail
 
+pdfs = glob.glob("data-raw/*.pdf")
 
-# Oh gosh darnit, fall_2011 is whack
-# po = {"skiprows": [0]}
-# df = tabula.read_pdf(urls.get("fall_2011"), pages="all", pandas_options=po, multiple_tables=False)[0]
-# df.columns = COLNAMES
-# df = df[~df.ACAD_GROUP.str.endswith("Totals", na=False)]
-# df = df[~df["ACAD_PLAN"].str.endswith("Total", na=False)]
-# df = df[~df.ACAD_PLAN.isna()]
-# df = df[df.ACAD_GROUP != "Acad Group"]
-# df.ACAD_ORG[0] = "ANT"
-# df.fillna(method="ffill")
-# df
-# # df.fill # fill the empty rows
-# df
-# View(df)
+def wcu_pdf_to_csv(x):
+    df = tabula.read_pdf(x, pages="all", multiple_tables=False)
+    df = pd.concat(df)
+    filename = os.path.splitext(os.path.basename(x))[0]
+    filename = "data-raw/pdf2csv/" + filename + ".csv"
+    df.to_csv(filename, index=False)
+    return filename
+  
+
+def try_wcu_pdf_to_csv(x):
+  try:
+    res = wcu_pdf_to_csv(x)
+  except Exception:
+    res = None
+  
+  return res
+
+[try_wcu_pdf_to_csv(i) for i in pdfs]
 
 
 def doDownloadData():
