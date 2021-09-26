@@ -50,27 +50,48 @@ urls = {
   "spring_2009": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Spring2009HeadcountbyAcademicPlanandDemographics.pdf"
 }
 
-# List of default column names?
-DEMOS = ["FEMALE", "MALE", "AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "PACIFIC_ISLANDER", "MULTI_RACIAL", "UNKNOWN", "IN_STATE", "OUT_OF_STATE"]
-DEMOS = [x for x in [[x + "_N", x + "_P"] for x in DEMOS]]
-DEMOS = pyjordan.unnest(DEMOS)
-ACADS = ["ACAD_" + x for x in ["GROUP", "ORG", "CAREER", "PLAN"]]
-COLNAMES = ACADS + ["DEGREE", "DESCRIPTION", "TOTAL"] + DEMOS
-
-# Hey, a different order
-DEMOS2 = ["FEMALE", "MALE", "AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "UNKNOWN", "MULTI_RACIAL", "IN_STATE", "OUT_OF_STATE"]
-DEMOS2 = [x for x in [[x + "_N", x + "_P"] for x in DEMOS2]]
-DEMOS2 = pyjordan.unnest(DEMOS2)
-COLNAMES2 = ACADS + ["DEGREE", "DESCRIPTION", "TOTAL"] + DEMOS2
+BAD_ROWS = [x + " Total" for x in ["Undergraduate", "Graduate", "University"]]
+BAD_ROWS.append("Acad Group")
+BAD_ROWS.append("College")
 
 
-def wcu_column_names(i):
-    switch={
-      1: COLNAMES,
-      2: COLNAMES2,
-      }
-    # Should this be an error?
-    return switch.get(i, "Invalid Column version")
+def wcu_column_names(i=1):
+  d = {
+    1: wcu_cn_demos(1),
+    2: wcu_cn_demos(2),
+    3: wcu_cn_demos(3),
+    4: wcu_cn_demos(4),
+    5: wcu_cn_old(1)
+  }
+  
+  return d.get(i)
+
+
+def wcu_cn_demos(i=1):
+  d = {
+    1: ["FEMALE", "MALE", "AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "PACIFIC_ISLANDER", "MULTI_RACIAL", "UNKNOWN", "IN_STATE", "OUT_OF_STATE"],
+    2: ["FEMALE", "MALE", "AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "UNKNOWN", "MULTI_RACIAL", "IN_STATE", "OUT_OF_STATE"],
+    3: ["AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "MULTI_RACIAL", "FEMALE", "MALE", "IN_STATE", "OUT_OF_STATE"],
+    4: ["AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "MULTI_RACIAL", "UNKNOWN", "MALE", "FEMALE", "IN_STATE", "OUT_OF_STATE"]
+  }
+  
+  demos = [x for x in [[x + "_N", x + "_P"] for x in d.get(i)]]
+  demos = pyjordan.unnest(demos)
+  acads = ["ACAD_" + x for x in ["GROUP", "ORG", "CAREER", "PLAN"]]
+  res = acads + ["DEGREE", "DESCRIPTION", "TOTAL"] + demos
+  return res
+  
+  
+def wcu_cn_old(i=1):
+  d = {
+    1: ["AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "MULTI_RACIAL", "UNKNOWN", "MALE", "FEMALE"]
+  }
+  
+  demos = [x for x in [[x + "_N", x + "_P"] for x in d.get(i)]]
+  demos = pyjordan.unnest(demos)
+  acads= ["CAREER", "SCHOOL", "ORG", "DESCRIPTION", "TOTAL_N"]
+  res = acads + demos
+  return(res)
 
 
 def rename_columns(x):
@@ -82,14 +103,14 @@ def rename_columns(x):
   
 def unnest_columns(dataframe):
   return [x[0] if "Unnamed" in x[1] else f"{x[0]}_{x[1]}" for x in dataframe]
-  
-BAD_ROWS = [x + " Total" for x in ["Undergraduate", "Graduate", "University"]]
-BAD_ROWS.append("Acad Group")
-BAD_ROWS.append("College")
 
 
-def wcu_read_excel(x, engine=None, nrows=None):
-  df = pd.read_excel(urls.get(x), header=[0, 1], engine=engine, nrows=nrows)
+def wcu_read_excel(x, engine=None, nrows=None, skipfooter=0):
+  df = pd.read_excel(urls.get(x),
+                     header=[0, 1],
+                     engine=engine, 
+                     nrows=nrows,
+                     skipfooter=skipfooter)
   df.columns = rename_columns(unnest_columns(df.columns))
   df = df[~df.ACAD_GROUP.isin(BAD_ROWS)]
   return df
@@ -97,8 +118,10 @@ def wcu_read_excel(x, engine=None, nrows=None):
 
 # Excel files --------------------------------------------------------
 # Excel files are a bit more clean
+# May be able to safely bind these together
 
-wcu_excel_df = {
+# could have used skipfooter=3 but I know how many rows they have
+wcu_excel_dict = {
     "fall_2020"   : wcu_read_excel("fall_2020", nrows=289),
     "fall_2019"   : wcu_read_excel("fall_2019", nrows=286),
     "fall_2018"   : wcu_read_excel("fall_2018", nrows=275),
@@ -115,6 +138,8 @@ wcu_excel_df = {
     "spring_2016" : wcu_read_excel("spring_2016", nrows=242)
 }
 
+wcu_excel_df = pd.concat(wcu_excel_dict)
+wcu_excel_df.shape
 
 # PDFs ---------------------------------------------------------------
 
@@ -122,21 +147,39 @@ def wcu_read_pdf(x,
                  skiprows=0,
                  fill=False, 
                  ant=False,
-                 cols=1
+                 cols=1,
+                 lattice=False,
+                 lineterminator=None
                  ):
-  po = {"skiprows": [skiprows]}
+  # x = "fall_2009"
+  # skiprows = 0
+  # fill = False
+  # ant = False
+  # cols = 3
+  
+  po = {
+    "skiprows": [skiprows],
+    "na_values": "-", 
+    "lineterminator": lineterminator
+    }
+  
   df = tabula.read_pdf(urls.get(x),
                        pages="all",
                        pandas_options=po,
-                       multiple_tables=False)
+                       multiple_tables=False,
+                       lattice=lattice)
   df = df[0]
+  # Does this do anything?
   df = df.replace("-", "0")
   
   # Set the new column names
   df.columns = wcu_column_names(cols)
   df[~df.ACAD_GROUP.isin(BAD_ROWS)]
+  # Clean this junk up
   df = df[~df.ACAD_GROUP.str.endswith("Total", na=False)]
+  df = df[~df.ACAD_GROUP.str.endswith("TOTALS", na=False)]
   df = df[~df.ACAD_GROUP.str.endswith("Totals", na=False)]
+  df = df[~df.ACAD_GROUP.str.endswith("TOTALS", na=False)]
   df = df[~df.ACAD_PLAN.str.endswith("Total", na=False)]
   df = df[~df.ACAD_PLAN.str.endswith("Totals", na=False)]
   df = df[~df.ACAD_PLAN.isna()]
@@ -157,10 +200,10 @@ def wcu_read_pdf(x,
 wcu_read_pdf("fall_2013", skiprows=1)
 wcu_read_pdf("fall_2011", fill=True, ant=True) # CAREER needs recoding
 wcu_read_pdf("fall_2010", fill=True, ant=True, cols=2) # bad alignment
-wcu_read_pdf("fall_2009") # 29 cols
-wcu_read_pdf("fall_2008") # 31 cols
-wcu_read_pdf("fall_2007") # 34 cols
-wcu_read_pdf("fall_2006") # 26 cols
+wcu_read_pdf("fall_2009", cols=3)
+wcu_read_pdf("fall_2008", cols=4, lattice=True) # This looks pretty bad
+wcu_read_pdf("fall_2007") # 34 cols -- something is wrong
+wcu_read_pdf("fall_2006", cols=5) # 26 cols -- something is wrong
 wcu_read_pdf("fall_2005") # 39 cols
 wcu_read_pdf("fall_2004") # fails
 wcu_read_pdf("fall_2003") # 26 cols
