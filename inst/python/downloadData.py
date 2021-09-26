@@ -14,7 +14,7 @@ pd.set_option('display.max_columns', 15)
 pd.set_option('display.width', 800)
 
 # Some of the files are PDFs
-
+# TODO changes these to the file paths
 urls = {
     # These are good
     "fall_2020": "https://www.wcupa.edu/viceProvost/institutionalResearch/documents/Fall2020HeadcountbyAcademicPlanandDemographics.xls",
