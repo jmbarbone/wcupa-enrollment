@@ -180,12 +180,10 @@ def wcu_read_pdf(x,
   df.columns = wcu_column_names(cols)
   df[~df.ACAD_GROUP.isin(BAD_ROWS)]
   # Clean this junk up
-  df = df[~df.ACAD_GROUP.str.endswith("Total", na=False)]
-  df = df[~df.ACAD_GROUP.str.endswith("TOTALS", na=False)]
-  df = df[~df.ACAD_GROUP.str.endswith("Totals", na=False)]
-  df = df[~df.ACAD_GROUP.str.endswith("TOTALS", na=False)]
-  df = df[~df.ACAD_PLAN.str.endswith("Total", na=False)]
-  df = df[~df.ACAD_PLAN.str.endswith("Totals", na=False)]
+  
+  df = df[~df.ACAD_CAREER.str.match("totals?", na=False, regex=True, case=False])
+  df = df[~df.ACAD_GROUP.str.match("totals?", na=False, regex=True, case=False])
+  df = df[~df.ACAD_PLAN.str.match("totals?", na=False, regex=True, case=False])
   df = df[~df.ACAD_PLAN.isna()]
   
   if ant:
