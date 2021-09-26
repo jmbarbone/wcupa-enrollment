@@ -7,6 +7,10 @@ import tabula
 import httpimport
 import pyjordan
 
+pd.set_option('display.max_rows', 20)
+pd.set_option('display.max_columns', 15)
+pd.set_option('display.width', 800)
+
 # Some of the files are PDFs
 
 urls = {
