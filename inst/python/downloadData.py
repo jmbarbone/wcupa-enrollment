@@ -4,7 +4,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import pandas as pd
 import tabula
-import httpimport
 import pyjordan
 import os
 import glob
@@ -201,7 +200,6 @@ def wcu_read_pdf(x,
 # wcu_read_pdf("spring_2009") # fail
 
 
-
 def wcu_pdf_to_csv(x):
     df = tabula.read_pdf(x, pages="all", multiple_tables=False)
     df = pd.concat(df)
@@ -215,13 +213,13 @@ def try_wcu_pdf_to_csv(x):
   try:
     res = wcu_pdf_to_csv(x)
   except Exception:
+    print("Failed: " + x)
     res = None
   
   return res
 
 
 def doDownloadData():
-    print("Working on it")
     wcu_excel_dict = {
         "fall_2020"   : wcu_read_excel("fall_2020", nrows=289),
         "fall_2019"   : wcu_read_excel("fall_2019", nrows=286),
@@ -247,4 +245,5 @@ def doDownloadData():
 
 
 if __name__ == "__main__":
+    print(os.getcwd())
     doDownloadData()
