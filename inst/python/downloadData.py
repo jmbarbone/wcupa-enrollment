@@ -79,23 +79,23 @@ def wcu_cn_demos(i=1):
         3: ["AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "MULTI_RACIAL", "FEMALE", "MALE", "IN_STATE", "OUT_OF_STATE"],
         4: ["AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "MULTI_RACIAL", "UNKNOWN", "MALE", "FEMALE", "IN_STATE", "OUT_OF_STATE"]
     }
-    
+
     demos = [x for x in [[x + "_N", x + "_P"] for x in d.get(i)]]
     demos = pyjordan.unnest(demos)
     acads = ["ACAD_" + x for x in ["GROUP", "ORG", "CAREER", "PLAN"]]
     res = acads + ["DEGREE", "DESCRIPTION", "TOTAL"] + demos
     return res
-  
-  
+
+
 def wcu_cn_old(i=1):
     d = {
         1: ["AFRICAN_AMERICAN", "NATIVE_AMERICAN", "ASIAN", "LATINO", "WHITE", "NON_RESIDENT_ALIEN", "MULTI_RACIAL", "UNKNOWN", "MALE", "FEMALE"]
     }
-  
+
     demos = [x for x in [[x + "_N", x + "_P"] for x in d.get(i)]]
     demos = pyjordan.unnest(demos)
     # Plan here is CIP...
-    acads= ["ACAD_CAREER", "ACAD_GROUP", "ACAD_ORG", "ACAD_PLAN", "DESCRIPTION", "TOTAL_N"]
+    acads = ["ACAD_CAREER", "ACAD_GROUP", "ACAD_ORG", "ACAD_PLAN", "DESCRIPTION", "TOTAL_N"]
     res = acads + demos
     return(res)
 
@@ -105,8 +105,8 @@ def rename_columns(x):
     d = {"-": "_", " ": "_", "%": "P"}
     res = [pyjordan.str_replace_all(i, d) for i in x]
     return res
-  
-  
+
+
 def unnest_columns(dataframe):
     return [x[0] if "Unnamed" in x[1] else f"{x[0]}_{x[1]}" for x in dataframe]
 
@@ -114,7 +114,7 @@ def unnest_columns(dataframe):
 def wcu_read_excel(x, engine=None, nrows=None, skipfooter=0):
     df = pd.read_excel(urls.get(x),
                        header=[0, 1],
-                       engine=engine, 
+                       engine=engine,
                        nrows=nrows,
                        skipfooter=skipfooter)
     df.columns = rename_columns(unnest_columns(df.columns))
@@ -132,7 +132,7 @@ def wcu_read_excel(x, engine=None, nrows=None, skipfooter=0):
 
 def wcu_read_pdf(x,
                  skiprows=0,
-                 fill=False, 
+                 fill=False,
                  ant=False,
                  cols=1,
                  lattice=False,
@@ -143,10 +143,10 @@ def wcu_read_pdf(x,
     # fill = False
     # ant = False
     # cols = 3
-    
+
     po = {
         "skiprows": [skiprows],
-        "na_values": "-", 
+        "na_values": "-",
         "lineterminator": lineterminator
     }
 
@@ -161,7 +161,7 @@ def wcu_read_pdf(x,
 
     # Set the new column names
     df.columns = wcu_column_names(cols)
-    
+
     df = df[~df.ACAD_GROUP.isin(BAD_ROWS)]
     df = df[~df.ACAD_CAREER.str.contains("total", na=False, case=False)]
     df = df[~df.ACAD_GROUP.str.contains("total", na=False, case=False)]
@@ -170,7 +170,7 @@ def wcu_read_pdf(x,
 
     if ant:
       df.ACAD_ORG[0] = "ANT"
-    
+
 
     if fill:
       df = df.fillna(method="ffill")
@@ -190,7 +190,7 @@ def wcu_read_pdf(x,
 # wcu_read_pdf("fall_2005") # 39 cols
 # wcu_read_pdf("fall_2004") # fails
 # wcu_read_pdf("fall_2003", cols=5)
-# 
+#
 # wcu_read_pdf("spring_2015") # 35 columns
 # wcu_read_pdf("spring_2014") # fail
 # wcu_read_pdf("spring_2013")
@@ -207,7 +207,7 @@ def wcu_pdf_to_csv(x):
     filename = "data-raw/pdf2csv/" + filename + ".csv"
     df.to_csv(filename, index=False)
     return filename
-  
+
 
 def try_wcu_pdf_to_csv(x):
   try:
@@ -215,7 +215,7 @@ def try_wcu_pdf_to_csv(x):
   except Exception:
     print("Failed: " + x)
     res = None
-  
+
   return res
 
 
@@ -239,7 +239,7 @@ def doDownloadData():
 
     wcu_excel_df = pd.concat(wcu_excel_dict)
     wcu_excel_df.to_csv("data-raw/excel2csv/wcu_headcounts.csv", index=False)
-    
+
     pdfs = glob.glob("data-raw/*.pdf")
     [try_wcu_pdf_to_csv(i) for i in pdfs]
 
